@@ -1,0 +1,776 @@
+CiscoASR1K-ACL-Mod-Automation-IPPayments.txt
+
+This file contains several python scripts that work together.
+The main purpose of this module is to update Cisco ASR1K gateway ACL.
+Since this device ACL doesn't support for FQDN, the un-notified IP addrss change of ippayments.com.au has to be manually checked and applied on Cisco ASR1K gateway.
+This manual job is automated by below codes that do :
+  - Every 3 a.m, the python script runs. (by cron job)
+  - Check the ip address of the fqdn ippayments.com.au,
+  - if not changed, end the program.
+  - if changed, a. fetch the current ACL configuration from the router.
+                b. modify the ACL with the replacement of the old ip addresseswith the new ip addresses.
+                c. apply the configuration to the router.
+                d. save the running config to start-up config.
+                e. reboot the gateway so the change takes effect.
+                 
+
+
+[t806247@caplpwf04 /appl/wifi]$ cat readme.txt
+
+
+
+Editing Cron jobs running : crontab -e
+  /appl/wifi/Cron/ipPayments/main.py  -- Check IP changes and configure WSG 01 & 02.
+  /appl/wifi/Cron/hello.py     -- Check IP changes and notify
+
+
+Script Libraries
+  /appl/wifi/lib
+  . logEnabler.py
+
+
+Working Script
+  /appl/wifi/[ProjectNames]
+
+
+
+Script under testing
+  /appl/wifi/Test/
+
+
+Examples - working examples
+  /appl/wifi/Test/Examples/
+
+
+
+[t806247@caplpwf04 /appl/wifi]$
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]# ls -l
+total 4752
+drwxr-xr-x 2 root root   4096 Dec 16  2019 ACL-history
+-rw-r--r-- 1 root root     40 Jun 17 03:35 b4inUse.ip
+-rw-r--r-- 1 root root   1505 Nov 13  2019 checkIpChange.py
+-rw-r--r-- 1 root root   1242 Dec 12  2019 confReload.py
+-rw-r--r-- 1 root root    381 Dec  3  2019 fmove.py
+-rw-r--r-- 1 root root    581 Dec  3  2019 fmove.pyc
+-rw-r--r-- 1 root root   2672 Jun 10  2020 hello.py
+-rw-r--r-- 1 root root     41 Jun 17 03:35 inUse.ip
+-rw-r--r-- 1 root root     43 Dec 12  2019 inUse.ip.org
+-rw-r--r-- 1 root root 338189 Jun 17 03:35 ipHistory.log
+-rw-r--r-- 1 root root   8982 Nov 28  2019 main-org.py
+-rw-r--r-- 1 root root   9031 Jun 10  2020 main.py
+-rw-r--r-- 1 root root   2952 Jun 17 03:35 new-acl.cfg
+-rw-r--r-- 1 root root   1071 Nov 13  2019 notify.py
+-rw-r--r-- 1 root root   1264 Nov 19  2019 notify.pyc
+-rw-r--r-- 1 root root   1157 Dec 16  2019 readme.txt
+-rw-r--r-- 1 root root      5 Dec  3  2019 test
+-rw-r--r-- 1 root root   2802 Nov 19  2019 wsg02-acl.txt
+-rw-r--r-- 1 root root   3123 Nov 19  2019 wsgAclBackup.py
+-rw-r--r-- 1 root root   3635 Nov 19  2019 wsgAclBackup.pyc
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron]#
+[root@caplpwf04 /appl/wifi/Cron]#
+[root@caplpwf04 /appl/wifi/Cron]#
+[root@caplpwf04 /appl/wifi/Cron]#
+[root@caplpwf04 /appl/wifi/Cron]#
+[root@caplpwf04 /appl/wifi/Cron]#
+[root@caplpwf04 /appl/wifi/Cron]#
+[root@caplpwf04 /appl/wifi/Cron]# cat readme.txt
+
+This program is to
+
+1. Check the ip addresses for 'www.ippayments.com.au' through dns resolution.
+2. If the ip addresses are same as the ones in the file inUse.ip, do nothing.
+3. If different, send notification email. (import notify)
+
+[root@caplpwf04 /appl/wifi/Cron]#
+[root@caplpwf04 /appl/wifi/Cron]#
+[root@caplpwf04 /appl/wifi/Cron]#
+[root@caplpwf04 /appl/wifi/Cron]#
+[root@caplpwf04 /appl/wifi/Cron]#
+[root@caplpwf04 /appl/wifi/Cron]#
+[root@caplpwf04 /appl/wifi/Cron]#
+[root@caplpwf04 /appl/wifi/Cron]#
+[root@caplpwf04 /appl/wifi/Cron]#
+[root@caplpwf04 /appl/wifi/Cron]# cat inUse.ip
+54.66.63.42
+54.253.120.87
+13.210.147.101
+[root@caplpwf04 /appl/wifi/Cron]# cat b4inUse.ip
+54.66.63.42
+54.253.120.87
+54.253.137.77
+[root@caplpwf04 /appl/wifi/Cron]#
+[root@caplpwf04 /appl/wifi/Cron]#
+[root@caplpwf04 /appl/wifi/Cron]#
+[root@caplpwf04 /appl/wifi/Cron]#
+[root@caplpwf04 /appl/wifi/Cron]#
+[root@caplpwf04 /appl/wifi/Cron]#
+
+[root@caplpwf04 /appl/wifi/Cron]#
+[root@caplpwf04 /appl/wifi/Cron]#
+[root@caplpwf04 /appl/wifi/Cron]#
+[root@caplpwf04 /appl/wifi/Cron]#
+[root@caplpwf04 /appl/wifi/Cron]#
+
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]# cat readme.txt
+
+===============
+About main.py
+===============
+
+This main.py program is scheduled to run everyday at 3:30 am.
+This program is to do the following
+
+1. Check the ip addresses for 'www.ippayments.com.au' through dns resolution.
+2. If the ip addresses are same as the ones in the file inUse.ip, do nothing.
+3. If different, send notification email.
+4.               prepare configuration file - new-acl.cfg.  => Change ACLs.
+5.               schedule the configuration/reboot for WSG1 & WSG2(at least one hour interval)
+
+>>File Description
+main.py : main program to do checking of ippayments ip addresses and update WSG ACLs accordingly.
+b4inUse.ip  : Previously used ip addresses for ippayments in WSG.
+inUse.ip : Currently used ip addresses for ippayments in WSG.
+ipHistory.log : Logs for the result of the execution of main.py
+
+
+
+
+======================
+About other program.
+======================
+
+fmove.py        : move a file to WSG flash drive
+
+confReload.py   : configure WSG using a file in flash drive and then reload WSG.
+
+hello.py        : check ippayments nslookup and notify if it has changed
+
+notify.py       : send emails to multiple recepients.
+
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]# cat main.py
+#Python main.py
+
+import os
+import socket
+from datetime import datetime
+import time
+import sys
+import pexpect
+from time import sleep
+
+
+def dateTimeStr():
+   # Returns the name in the form of yyyy-mm-dd:hh:mm:ss
+   now = datetime.now()
+   return str(now.year)+'-'+str(now.month)+'-'+str(now.day)+':'+str(now.hour)+':'+str(now.minute)+':'+str(now.second)
+
+
+
+def logger(s):
+   f = open('/appl/wifi/Cron/ipPayments/ipHistory.log', 'a')
+   f.write(dateTimeStr()+'     '+s+'\n\n')
+   f.close()
+
+
+
+def fCreate(fn,l=[]):
+   print('\n\nUpdating '+fn)
+   fo = open(fn, 'w')
+   for item in l:
+     fo.write(item+'\n')
+   fo.close()
+   print('\nFile Create/Update finished. \n\n')
+   logger(fn+'file updated.')
+
+
+
+def getACL(ip,u,p,aclList):
+# Get three access list aclList
+  child = pexpect.spawn('ssh -o StrictHostKeyChecking=no %s@%s' % (u,ip), maxread=200000, searchwindowsize=200000)
+  child.expect('assword:')
+  child.sendline(p)
+  child.expect('#')
+  child.sendline('terminal length 0')
+  child.expect('#')
+  result=''
+  child.buffer = ''
+  aclList = ['V2_L4REDIRECT_SSL_ACL_IN', 'V2_OPENGARDEN_ACL_IN', 'V2_OPENGARDEN_ACL_OUT']
+  for each in aclList:
+      cmd = 'show run | section '+each
+      child.sendline(cmd)
+      child.expect('#')
+      result = result + child.before
+      result = result.replace(cmd,'').replace(ip,'')
+      sleep(0.5)
+  child.close()
+  return result
+
+
+def fileMove(filename, destHost):
+   commandString="sshpass -p 'aut0m@t3' scp /appl/wifi/Cron/ipPayments/"+filename+" automate@"+destHost+":"+filename
+   os.system(commandString)
+
+
+def reboot(ip, seconds):
+  sleep(seconds)
+  configL = ['reload', '\r']
+  sendCiscoCmd(ip, configL)
+
+
+
+def sendCiscoCmd(ip, configL):
+  child = pexpect.spawn('ssh -o StrictHostKeyChecking=no %s@%s' % (u,ip), maxread=200000, searchwindowsize=200000)
+  child.expect('assword:')
+  child.sendline(p)
+  child.expect('#')
+  for conf in configL:
+     child.sendline(conf)
+     #child.expect('#')
+     sleep(0.2)
+  child.close()
+
+
+
+
+def ipChangeNotify(receipients):
+   import smtplib
+   from email.mime.text import MIMEText
+   from email.mime.multipart import MIMEMultipart
+
+
+   s='IP Change Notification'
+   subject = 'IPPayment : IP Addresses have been Changed'
+   sender = 'james.jung@spark.co.nz'
+   #receipients = ['james.jung@spark.co.nz', 'Prabhash.Kashyap@spark.co.nz', 'Vasantha.Kumar@spark.co.nz']
+   msg = MIMEMultipart(s)
+   msg['Subject'] = subject
+   msg['From'] = sender
+
+   part1 = open('/appl/wifi/Cron/ipPayments/inUse.ip', 'r')
+   ms = part1.read()
+   nms = 'New IP Addresses...\n\n'+ms
+   attach0 = MIMEText('IP Address Change Notification.\n\nPlease find attachments for the details.')
+   attach1 =  MIMEText(nms)
+   part2 = open('/appl/wifi/Cron/ipPayments/b4inUse.ip', 'r')
+   ms = part2.read()
+   nms = 'Previous IP Addresses...\n\n'+ms
+   attach2 =  MIMEText(nms)
+   part2.close()
+   msg.attach(attach0)
+   msg.attach(attach1)
+   msg.attach(attach2)
+   s = smtplib.SMTP('caplovh05.telecom.tcnz.net')
+   for receipient in receipients:
+     msg['To'] = receipient
+
+   for receipient in receipients:
+     s.sendmail(sender, receipient, msg.as_string())
+
+   s.quit()
+
+
+
+
+
+def sendEmail(s, r, t, pair):
+   import smtplib
+   from email.mime.text import MIMEText
+   from email.mime.multipart import MIMEMultipart
+
+   msg = MIMEMultipart(str(pair));
+   msg['Subject'] = t
+   msg['From'] = s
+   msg['To'] = r
+   ##
+   attach0 = MIMEText(str(pair))
+   part1 = open('/appl/wifi/Cron/ipPayments/wsg01-acl.txt', 'r')
+   attach1 =  MIMEText(part1.read())
+   part1.close
+   part2 = open('/appl/wifi/Cron/ipPayments/wsg02-acl.txt', 'r')
+   attach2 =  MIMEText(part2.read())
+   part2.close
+   msg.attach(attach0)
+   msg.attach(attach1)
+   msg.attach(attach2)
+   ## Send the email via ou
+   s = smtplib.SMTP('caplovh05.telecom.tcnz.net')
+   s.sendmail(s, r, msg.as_string())
+   s.quit()
+
+
+def createConfig(dList, aList, aclc):
+# dList : obsolete IPs
+# aList : new IPs that will replace obsolete IPs
+# aclc : acl string content from WSG
+#
+   aclName = ['ip access-list extended V2_L4REDIRECT_SSL_ACL_IN', 'ip access-list extended V2_OPENGARDEN_ACL_IN', 'ip access-list extended V2_OPENGARDEN_ACL_OUT']
+
+   for i in dList:
+       aclc = aclc.replace(i,aList[0])
+       aList.pop(0)
+
+   for each in aclName:
+       aclc = aclc.replace(each, 'no '+each+'\n'+each)
+
+   f = open('/appl/wifi/Cron/ipPayments/new-acl.cfg','w')
+   f.write(aclc)
+   f.close
+   return aclc
+
+
+
+'''
+Main Program
+'''
+
+#Get current ip addresses for FQDN www.ippayments.com.au - nslookup
+
+ip_list = []
+nullSet = set()
+
+ais = socket.getaddrinfo("www.ippayments.com.au",0,0,0,0)
+
+for result in ais:
+  ip_list.append(result[-1][0])
+
+newSet = set(ip_list) - {''}
+ip_list = list(newSet)
+
+
+
+#Get IP addresses currently used in WSG
+fr = open('/appl/wifi/Cron/ipPayments/inUse.ip', 'r')
+fc = fr.read().split('\n')
+fr.close()
+inUseSet = set(fc)-{''}
+
+
+changedSet = newSet - inUseSet
+#print('newSet = '+str(newSet))
+#print('inUseSet = '+str(inUseSet))
+if changedSet == nullSet:
+   #print('\n\nNo IP changes. Job Ended Successfully... \n\n')
+   logger('No IP changes. Job Ended Successfully... ')
+else:
+   # Update log file
+   # print('\n\nIP Changed....\n\nUpdating ipHistory.txt')
+   s = 'Old IP Addresses ...'+str(list(inUseSet))+'     New IP Addresses ...'+str(ip_list)
+   logger(s)
+   # check ACL between WSG1 & WSG2
+   #ACL in interest
+   aclList = ['V2_L4REDIRECT_SSL_ACL_IN', 'V2_OPENGARDEN_ACL_IN', 'V2_OPENGARDEN_ACL_OUT']
+   # Get ACL from both WSG1 and WSG2 and put in pair[]
+   host = ['AKmdrWiFiWSG1', 'AKmdrWiFiWSG2']
+   pair = []
+   u='automate'
+   p='aut0m@t3'
+   for ip in host:
+      pair.append(getACL(ip,u,p,aclList))
+
+   if pair[0] != pair[1] :
+      f = open('/appl/wifi/Cron/ipPayments/wsg01-acl.txt','w')
+      f.write(pair[0])
+      f.close
+      f = open(+'/appl/wifi/Cron/ipPayments/wsg02-acl.txt','w')
+      f.write(pair[1])
+      f.close
+      #print('\n\n!!!!!!!!!!!!!!!!!! Warning !!!!!!!!!!!!!!!!!!!!!\n\n          The ACL has different lists on two devices. \n\n         Operation Aborted. \n\n !!!!!!!!!!!!!!!!!! Warning !!!!!!!!!!!!!!!!!!!!!')
+
+      logger('\nThe ACL has different lists on two devices.  Operation Aborted. \n')
+      sendEmail('james.jung@spark.co.nz', 'james.jung@spark.co.nz', '\nThe ACL has different lists on two devices.  Operation Aborted. \n', pair)
+      '''
+      sys.exit('\nThe job ended UNSUCCESSFULLY. \nPlease correct the difference and run this job again.\n\n')
+      '''
+
+   fn1 = '/appl/wifi/Cron/ipPayments/WSG01ACL-b4-'+dateTimeStr()+'.history'
+   fn2 = '/appl/wifi/Cron/ipPayments/WSG02ACL-b4-'+dateTimeStr()+'.history'
+   # update ACL-b4-YYYY-MM-DD:TT:MM:SS.history with newly fetched ACL
+   f = open(fn1,'w')
+   f.write(pair[0])
+   f.close()
+   f = open(fn2,'w')
+   f.write(pair[1])
+   f.close()
+
+   # Update log file
+   f = open('/appl/wifi/Cron/ipPayments/ipHistory.log','a')  ## This is to leave a log.
+   f.write(dateTimeStr()+'    IP Change occurred... \n       '+fn1+'  and   '+fn2+'  ...  is created.\n')
+   f.close()
+
+   #
+   # Update the file
+   fCreate('/appl/wifi/Cron/ipPayments/b4inUse.ip', list(inUseSet))
+   fCreate('/appl/wifi/Cron/ipPayments/inUse.ip', ip_list)
+   #
+   #receipients = ['james.jung@spark.co.nz']
+   receipients = ['james.jung@spark.co.nz', 'Prabhash.Kashyap@spark.co.nz', 'Vasantha.Kumar@spark.co.nz', 'Brodie.Davis@spark.co.nz']
+   ipChangeNotify(receipients)   # Runs email notification for the change.
+   #
+   #Make config file using pair[0] from above wsgAclBackup
+   dList = list(inUseSet - newSet) ## This needs deleted
+   aList = list(newSet - inUseSet) ## This needs added
+
+   ### From Here Testing
+
+   newConfig = createConfig(dList, aList, str(pair[0])) ## Create 'new-acl.cfg'
+
+   ### delete previous new-acl.cfg in the router  &  move newly created new-acl.cfg into the router
+   configL = ['del flash:new-acl.cfg', '\r', '\r']
+   sendCiscoCmd('akmdrwifiwsg1',  configL)
+   fileMove('new-acl.cfg', 'akmdrwifiwsg1')
+   sendCiscoCmd('akmdrwifiwsg2',  configL)
+   fileMove('new-acl.cfg', 'akmdrwifiwsg2')
+   ### apply new-acl.cfg into the router and save the config
+   configL = ['copy flash:new-acl.cfg running-config', '\r', 'wr', '\r']
+   sendCiscoCmd('akmdrwifiwsg1',  configL)
+   sendCiscoCmd('akmdrwifiwsg2',  configL)
+   '''
+   Check if the new config is correct by comparing the running config with
+   newPair = []
+   for ip in host:
+      newPair = append(getACL(ip, u, p, aclList))
+   if ( newConfig != newPair[0] ) AND ( newConfig != newPair[1] )
+      logger('Configuration Check Failed !!  Process Aborted.  Please Check.\n')
+      logmsg = '\nNew Configuration\n\n'+newConfig+'\n\n\nWSG Configuration\n\n'+newPair)
+      sendEmail('james.jung@spark.co.nz', 'james.jung@spark.co.nz', '\nConfiguration Check Failed !!  Process Aborted.  Please Check. \n', logmsg)
+      sys.exit()
+   '''
+
+   ### reload the routers
+   configL = ['reload', '\r']
+   sendCiscoCmd('akmdrwifiwsg1',  configL)
+   sleep(3600)
+   sendCiscoCmd('akmdrwifiwsg2',  configL)
+
+
+## End of Program.
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]# cat fmove.py
+"""
+Python3.
+Moving a File to Cisco Flash drive
+
+Usage : python fmove.py thisfile ciscoDeviceName/IP
+"""
+
+import os
+import sys
+
+#try:
+filename = str(sys.argv[1])
+destHost = str(sys.argv[2])
+commandString="sshpass -p 'aut0m@t3' scp /appl/wifi/Cron/ipPayments/"+filename+" automate@"+destHost+":"+filename
+print (commandString)
+os.system(commandString)
+#except:
+#   print('Failed')
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]# cat notify.py
+#
+# This is to send notification email.
+# Attached files are inUse.ip & b4inUse.ip'
+#
+
+
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
+
+s='IP Change Notification'
+subject = 'IPPayment : IP Addresses have been Changed'
+sender = 'james.jung@spark.co.nz'
+receipients = ['james.jung@spark.co.nz', 'Prabhash.Kashyap@spark.co.nz', 'Vasantha.Kumar@spark.co.nz']
+msg = MIMEMultipart(s)
+msg['Subject'] = subject
+msg['From'] = sender
+
+part1 = open('inUse.ip', 'r')
+ms = part1.read()
+nms = 'New IP Addresses...\n\n'+ms
+attach0 = MIMEText('IP Address Change Notification.\n\nPlease find attachments for the details.')
+attach1 =  MIMEText(nms)
+part2 = open('b4inUse.ip', 'r')
+ms = part2.read()
+nms = 'Previous IP Addresses...\n\n'+ms
+attach2 =  MIMEText(nms)
+part2.close()
+msg.attach(attach0)
+msg.attach(attach1)
+msg.attach(attach2)
+s = smtplib.SMTP('caplovh05.telecom.tcnz.net')
+for receipient in receipients:
+  msg['To'] = receipient
+
+for receipient in receipients:
+  s.sendmail(sender, receipient, msg.as_string())
+
+s.quit()
+
+
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]# cat confReload.py
+
+"""
+
+Configure the router using new-acl.cfg file in the router flash,
+and reload the router after xxx hours
+
+Usage : python confReload.py 11     : Config & Reload after 11 hours
+
+"""
+
+import sys
+from time import sleep
+import os
+import pexpect
+
+# Wait for duration time before proceeding
+
+if len(sys.argv) > 1 :
+   duration = int(sys.argv[1])*3600
+   sleep(duration)
+
+def sendCiscoCmd(ip, configL):
+  child = pexpect.spawn('ssh -o StrictHostKeyChecking=no %s@%s' % ('automate',ip), maxread=200000, searchwindowsize=200000)
+  child.expect('assword:')
+  child.sendline('aut0m@t3')
+  child.expect('#')
+  for conf in configL:
+     child.sendline(conf)
+     #child.expect('#')
+     sleep(0.2)
+  child.close()
+  return 1
+
+'''
+### apply new-acl.cfg into the router and save the config
+configL = ['copy flash:new-acl.cfg running-config', '\r', 'wr', '\r']
+sendCiscoCmd('akmdrwifiwsg1',  configL)
+sendCiscoCmd('akmdrwifiwsg2',  configL)
+
+### reload the routers
+configL = ['reload', '\r']
+sendCiscoCmd('akmdrwifiwsg1',  configL)
+sleep(1200)
+sendCiscoCmd('akmdrwifiwsg2',  configL)
+'''
+
+
+configL = ['show version',' ', ' ', '\r']
+result = sendCiscoCmd('akmdrwifiwsg1',  configL)
+if result:
+   print('Program finished Successfully')
+
+
+
+#End of Program
+
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]# cat hello.py
+
+import os
+import socket
+from datetime import datetime
+
+
+def dateTimeStr():
+   # Returns the name in the form of yyyy-mm-dd
+   now = datetime.now()
+   return str(now.year)+'-'+str(now.month)+'-'+str(now.day)+':'+str(now.hour)+':'+str(now.minute)+':'+str(now.second)
+
+
+
+def logger(s):
+   global ipHistorylog
+   f = open(ipHistorylog, 'a')
+   f.write('\n'+dateTimeStr()+'     '+s+'\n')
+   f.close()
+
+
+
+def fCreate(fn,l=[]):
+   print('\n\nUpdating '+fn)
+   fo = open(fn, 'w')
+   for item in l:
+     fo.write(item+'\n')
+   fo.close()
+   print('\nFile Create/Update finished. \n\n')
+   logger(fn+'file updated.')
+
+
+
+
+def changeNotify():
+   import smtplib
+   from email.mime.text import MIMEText
+   from email.mime.multipart import MIMEMultipart
+   s='IP Change Notification'
+   subject = 'IPPayment : IP Addresses have been Changed'
+   sender = 'james.jung@spark.co.nz'
+   #receipients = ['james.jung@spark.co.nz']
+   receipients = ['james.jung@spark.co.nz', 'Prabhash.Kashyap@spark.co.nz', 'Vasantha.Kumar@spark.co.nz']
+   msg = MIMEMultipart(s)
+   msg['Subject'] = subject
+   msg['From'] = sender
+
+   part1 = open('/appl/wifi/Cron/inUse.ip', 'r')
+   ms = part1.read()
+   nms = 'New IP Addresses...\n\n'+ms
+   attach1 =  MIMEText(nms)
+   part2 = open('/appl/wifi/Cron/b4inUse.ip', 'r')
+   ms = part2.read()
+   nms = 'Previous IP Addresses...\n\n'+ms
+   attach2 =  MIMEText(nms)
+   part2.close()
+   msg.attach(attach1)
+   msg.attach(attach2)
+   s = smtplib.SMTP('caplovh05.telecom.tcnz.net')
+   for receipient in receipients:
+     msg['To'] = receipient
+   for receipient in receipients:
+     s.sendmail(sender, receipient, msg.as_string())
+   s.quit()
+
+
+#Get current ip addresses for FQDN www.ippayments.com.au - nslookup
+
+ip_list = []
+nullSet = set()
+
+ais = socket.getaddrinfo("www.ippayments.com.au",0,0,0,0)
+
+for result in ais:
+  ip_list.append(result[-1][0])
+
+newSet = set(ip_list) - {''}
+ip_list = list(newSet)
+
+
+#Get IP addresses currently used in WSG
+inUseIP = '/appl/wifi/Cron/ipPayments/inUse.ip'
+b4inUseIP = '/appl/wifi/Cron/ipPayments/b4inUse.ip'
+ipHistorylog = '/appl/wifi/Cron/ipPayments/ipHistory.log'
+
+fr = open(inUseIP, 'r')
+fc = fr.read().split('\n')
+fr.close()
+inUseSet = set(fc)-{''}
+
+
+if newSet - inUseSet == nullSet:
+   print('\n\nNo IP changes. Job Ended Successfully... \n\n')
+   logger('No IP changes. Job Ended Successfully... ')
+else:
+   # Update log file
+   print('\n\nIP Changed....\n\nUpdating ipHistory.txt')
+   s = 'Old IP Addresses ...'+str(list(inUseSet))+'\nNew IP Addresses ...'+str(ip_list)
+   logger(s)
+   #
+   # Update the file
+   fCreate(b4inUseIP, list(inUseSet))
+   fCreate(inUseIP, ip_list)
+   #
+   changeNotify()
+
+
+# End of Program
+
+[root@caplpwf04 /appl/wifi/Cron/ipPayments]#
+[root@caplpwf04 /appl/wifi/Ansible]#
+[root@caplpwf04 /appl/wifi/Ansible]#
+[root@caplpwf04 /appl/wifi/Ansible]# cd working/
+[root@caplpwf04 /appl/wifi/Ansible/working]# ls
+inventory  saveRunFlash.yml
+[root@caplpwf04 /appl/wifi/Ansible/working]#
+[root@caplpwf04 /appl/wifi/Ansible/working]#
+[root@caplpwf04 /appl/wifi/Ansible/working]#
+[root@caplpwf04 /appl/wifi/Ansible/working]# cat inventory
+[ios_devices]
+akmdrwifiwsg2
+[root@caplpwf04 /appl/wifi/Ansible/working]# cat saveRunFlash.yml
+---
+- name: Save config and backup
+
+  hosts: ios_devices
+  gather_facts: false
+  connection: local
+
+  vars:
+    cli:
+      username: automate
+      password: aut0m@t3
+
+  tasks:
+    - name : saving running to startup always
+      ios_command:
+        commands:
+          - command: 'copy running-config flash:backup.cfg'
+            prompt: 'Destination filename [backup.cfg]?'
+            answer: 'backup.cfg'
+        provider: "{{ cli }}"
+
+[root@caplpwf04 /appl/wifi/Ansible/working]#
+
+
+
+
